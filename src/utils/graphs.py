@@ -23,14 +23,29 @@ def random_graph(num_nodes=5,prob_edge=0.3,seed=42):
                         'y': center+random.randint(-center,center)}
     return G
 
-def get_keypoints(img,nFeatures=None):
+def get_keypoints(img,nFeatures=None,return_pixel_color=None):
     if nFeatures is not None:
         sift = cv.SIFT_create(nFeatures)
     else:
         sift = cv.SIFT_create()
     kp, des = sift.detectAndCompute(img, None)
-    key_points = [key.pt for key in kp]
-    keyrelative_neighborhood_points = np.unique(key_points,axis=0)
+
+    if return_pixel_color:
+        key_points = []
+        pixels = []
+        for keypoint in kp:
+            x,y = keypoint.pt
+            x= int(x)
+            y = int(y)
+            if keypoint.pt not in key_points:
+                key_points.append(keypoint.pt)
+                pixels.append(img[x][y].tolist())
+
+        return zip(key_points,pixels)
+    else:
+        key_points = [key.pt for key in kp]
+    #keyrelative_neighborhood_points = np.unique(key_points,axis=0)
+
     return key_points
 
 def get_distances_between_keypoints(keypoints):

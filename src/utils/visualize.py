@@ -53,8 +53,13 @@ def plot_voronoi(voronoi, img_arr, points_size=1, line_width=0.5, show_points=Fa
     ax.imshow(img_arr)
     fig = voronoi_plot_2d(voronoi, ax=ax, line_width=line_width, show_points=show_points, show_vertices=show_verticles,
                           point_size=points_size)
-    plt.gca().invert_yaxis()
+
     if save_as_file:
         #plt.show()
         plt.savefig(filename)
+    axes = plt.gca()
+    shape = img_arr.shape
+    axes.set_xlim([0, shape[0]])
+    axes.set_ylim([0, shape[1]])
+    axes.invert_yaxis()
     return fig

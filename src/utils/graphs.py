@@ -23,12 +23,19 @@ def random_graph(num_nodes=5,prob_edge=0.3,seed=42):
                         'y': center+random.randint(-center,center)}
     return G
 
-def get_keypoints(img,nFeatures=None,return_pixel_color=None):
-    if nFeatures is not None:
-        sift = cv.SIFT_create(nFeatures)
+def get_detector(name='sift',nFeatures=None):
+    if name=='sift':
+        detector = cv.SIFT_create(nFeatures)
+        return detector
+    elif name=='orb':
+        detector = cv.ORB_create(nFeatures)
+        return detector
     else:
-        sift = cv.SIFT_create()
-    kp, des = sift.detectAndCompute(img, None)
+        return name
+
+def get_keypoints(img,nFeatures=None,return_pixel_color=None,detector='sift'):
+    detector = get_detector(detector,nFeatures)
+    kp, des = detector.detectAndCompute(img, None)
 
     if return_pixel_color:
         key_points = []

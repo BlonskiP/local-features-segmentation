@@ -1,5 +1,12 @@
 data/*
-
+*.jpg
+*.json
+*.csv
+*.png
+*.pickle
+*densenet*
+*.rar
+*.pdf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

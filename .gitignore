@@ -1,5 +1,6 @@
 ./notebooks/best_models/*
 /notebooks/best_models/*
+/notebooks/logs/*
 data/*
 *.jpg
 *.json

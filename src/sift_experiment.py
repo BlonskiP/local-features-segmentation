@@ -85,31 +85,34 @@ def sift_metric_research(df, keypoints, radius=2, plot=False, img_plot=None):
 
 def add_columns(params,df):
     #[sigma, octave, edge_limit, contrast, radius]
-    df['sigma'] = params[0]
-    df['octave'] = params[1]
-    df['edge_limit'] = params[2]
-    df['contrast'] = params[3]
-    df['radius'] = params[4]
-    df['img_name'] = params[5]
+    df['sigma'] = params['sigma']
+    df['octave'] = params['octave']
+    df['edge_limit'] = params['edge_limit']
+    df['contrast'] = params['contrast']
+    df['radius'] = params['radius']
+    df['img_name'] = params['img_name']
+    df['size'] = params['size']
     return df
 
 
 def sift_run(params):
     try:
         sift = cv.SIFT_create(
-            nOctaveLayers=params[1],
-            contrastThreshold=params[3],
-            edgeThreshold=params[2],
-            sigma=params[0])
-        keypoints = sift.detect(params[-1], None)
-        kp = list(np.unique([key.pt for key in keypoints], axis=0))
-        res, res_df, res_key = sift_metric_research(params[6], kp, params[4])
+            nOctaveLayers=params['octave'],
+            contrastThreshold=params['contrast'],
+            edgeThreshold=params['edge_limit'],
+            sigma=params['sigma'])
+        keypoints = sift.detect(params['img'], None)
+        keypoints = [keypoint for keypoint in keypoints if keypoint.size > params['size']]
+        print('keypoints: ',len(keypoints),params['img_name'])
+        kp = list(np.unique([key.pt for key in keypoints ], axis=0))
+        res, res_df, res_key = sift_metric_research(params['df'], kp, params['radius'])
         res = add_columns(params,res)
         res_df = add_columns(params,res_df)
         res_key = add_columns(params,res_key)
     except Exception as e:
         print('error with:', e)
-        print(f"params:{params[:-2]}")
+        print(f"params: ",params['img_name'],params['sigma'])
         return None
     else:
         #print(f"Done params:{params}")
@@ -141,28 +144,50 @@ def experiment(img_name):
     #octave_range=range(30,50,5) #exp2
     #edge_Threshold_range = range(10,50,10) #exp1
     #contrast_range= np.arange (0.05, 0.01, -0.01) #exp1
+    params_dic = {
+    'radius' : [8],#range(8,9),
+    'sigma' : range(13,14),
+    'octave_range' : range(30,45,5),
+    'edge_Threshold_range': [30], #range(30,50,10),
+    'contrast_range' : [0.01,0.02],#np.arange (0.02, 0.009, -0.01),
+    'radius_range' : [5,8],#range(5,9),
+    'size' : range(8,100,10)
+    }
+    #radius_range= #best
+    #sigma_range=range(13,14) #best
+    #octave_range=range(30,45,5) #best
+    #edge_Threshold_range = range(30,50,10) #best
+    #contrast_range= np.arange (0.02, 0.009, -0.01) #best
 
-    radius_range=range(8,9) #best
-    sigma_range=range(13,14) #best
-    octave_range=range(30,45,5) #best
-    edge_Threshold_range = range(30,50,10) #best
-    contrast_range= np.arange (0.02, 0.009, -0.01) #best
+
 
     params_combination = []
-    for sigma in tqdm(sigma_range):
+    for sigma in tqdm(params_dic['sigma']):
         sigma = sigma / 10
-        for octave in octave_range:
-            for edge_limit in edge_Threshold_range:
-                for contrast in contrast_range:
-                    for radius in radius_range:
-                        params_combination.append([sigma, octave, edge_limit, contrast, radius,img_name,df,img])
+        for octave in params_dic['octave_range']:
+            for edge_limit in params_dic['edge_Threshold_range']:
+                for contrast in params_dic['contrast_range']:
+                    for radius in params_dic['radius_range']:
+                        for size in params_dic['size']:
+                            params = {
+                            'radius':radius,
+                            'contrast':contrast,
+                            'edge_limit':edge_limit,
+                            'octave':octave,
+                            'size':size,
+                            'sigma':sigma,
+                            'img_name':img_name,
+                            'df':df,
+                            'img':img,
+                            }
+                            params_combination.append(params)
     #print(len(params_combination))
     results = []
     with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
         results_exe = executor.map(sift_run, params_combination)
         for res in tqdm(results_exe,total=len(params_combination),desc=f"{img_name} progress"):
             results.append(res)
-    with open(f"results_{img_name}.pickle", 'wb') as handle:
+    with open(f"results/results_{img_name}.pickle", 'wb') as handle:
         pickle.dump(list(results), handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 #img_path = os.path.join(str(data_path),str(img_name)+".jpg")

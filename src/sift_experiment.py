@@ -9,6 +9,8 @@ from scipy.spatial.distance import cdist
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+
+
 JSON_EXT = ".json"
 JPG_EXT = ".jpg"
 train_set = r"../data/Ki67/SHIDC-B-Ki-67/Train"
